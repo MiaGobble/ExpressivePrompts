@@ -141,6 +141,7 @@ local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.Proximity
     end
 
 	return function()
+		ButtonHeldDown.Value = false
 		PromptTransparency.Value = 1
 
         task.delay(2, function()

@@ -54,7 +54,7 @@ return function(Scope : any, Properties : Properties) : {RBXScriptConnection}
 			if Properties.ButtonHeldDown.Value then
 				Properties.CurrentBarSize.Value = math.min(Properties.CurrentBarSize.Value + deltaTime / Properties.prompt.HoldDuration, 1)
 	
-				SoundService:FindFirstChild(HOLD_SOUND).PlaybackSpeed = 0.5 + TimeHeldDown * 1
+				SoundService:FindFirstChild(HOLD_SOUND).PlaybackSpeed = 0.5 + TimeHeldDown
 			else
 				Properties.CurrentBarSize.Value = 0
 			end
