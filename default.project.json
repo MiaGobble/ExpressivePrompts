@@ -1,0 +1,13 @@
+{
+  "name": "ExpressivePrompts",
+
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "ExpressivePrompts": {
+        "$path": "src"
+      }
+    }
+  }
+}
