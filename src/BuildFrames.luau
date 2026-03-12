@@ -5,12 +5,14 @@ return function(Scope : any, Seam : any, Config : {}, PromptUI, ButtonHeldDown, 
 		end), Config.MainSizeSpringSpeed, Config.MainSizeSpringDampening),
 
 		Rotation = Scope:Spring(Scope:Computed(function(Use)
+			local RotationStrength = Use(Config.MainRotationStrength)
+
 			if Use(ButtonHeldDown) then
-				return -5
+				return -RotationStrength
 			elseif Use(PromptTransparency) < 1 then
 				return 0
 			else
-				return 5
+				return RotationStrength
 			end
 		end), Config.MainRotationSpringSpeed, Config.MainRotationSpringDampening),
 		

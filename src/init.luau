@@ -13,6 +13,7 @@
 	Config.MainSizeSpringDampening number -- The spring dampening for the main size animation
 	Config.MainRotationSpringSpeed number -- The spring speed for the main rotation animation
 	Config.MainRotationSpringDampening number -- The spring dampening for the main rotation animation
+	Config.MainRotationStrength number -- How far the main frame can rotate
 	Config.AspectRatioSpringSpeed number -- The spring speed for the aspect ratio animation
 	Config.AspectRatioSpringDampening number -- The spring dampening for the aspect ratio animation
 	Config.ProgressBarYScale number -- The Y scale (0-1) of the progress bar size
@@ -36,6 +37,10 @@ local ExpressivePrompts = {}
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local PlayersService = game:GetService("Players")
 
+if not game:IsLoaded() then -- Useful for when loading this from a script in ReplicatedFirst
+	game.Loaded:Wait()
+end
+
 -- Imports
 local Packages = script:FindFirstChild("Packages")
 local Seam = if Packages then require(Packages.Seam) else require(script.Parent.Seam)
@@ -54,13 +59,14 @@ local Gui = nil
 ExpressivePrompts.Config = {
 	BackgroundTransparency = Scope:Value(0.5),
 	BackgroundColor = Scope:Value(Color3.new(0.07, 0.07, 0.07)),
-	TextColor = Scope:Value(Color3.new(1, 1, 1)), -- TODO: Implement
+	TextColor = Scope:Value(Color3.new(1, 1, 1)),
 	SubTextColor = Scope:Value(Color3.new(0.7, 0.7, 0.7)),
 	CornerRadius = Scope:Value(16),
 	MainSizeSpringSpeed = Scope:Value(20),
 	MainSizeSpringDampening = Scope:Value(0.4),
 	MainRotationSpringSpeed = Scope:Value(30),
 	MainRotationSpringDampening = Scope:Value(0.1),
+	MainRotationStrength = Scope:Value(5),
 	AspectRatioSpringSpeed = Scope:Value(20),
 	AspectRatioSpringDampening = Scope:Value(0.4),
 	ProgressBarYScale = Scope:Value(0.1),
@@ -88,7 +94,7 @@ local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.Proximity
 	local AspectRatioValue = PromptScope:Value(1)
 	local CurrentBarSize = PromptScope:Value(0)
 
-	local InputConnections : {RBXScriptConnection} = NewInputConnections(PromptScope, {
+	local InputConnections : {RBXScriptConnection} = NewInputConnections(Scope, {
 		prompt = Prompt,
 		ButtonHeldDown = ButtonHeldDown,
 		CurrentBarSize = CurrentBarSize,
