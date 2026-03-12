@@ -1,7 +1,30 @@
 --[=[
-    Customizable UI that replaces the default for ProximityPrompt instances.
+	Customizable UI that replaces the default for ProximityPrompt instances.
 
-    @class ExpressivePrompts
+	Below are the config entries:
+	
+	```
+	Config.BackgroundTransparency number -- The background transparency
+	Config.BackgroundColor Color3 -- The background color
+	Config.TextColor Color3 -- The text and icon color
+	Config.CornerRadius number -- The corner radius on the main background
+	Config.MainSizeSpringSpeed number -- The spring speed for the main size animation
+	Config.MainSizeSpringDampening number -- The spring dampening for the main size animation
+	Config.MainRotationSpringSpeed number -- The spring speed for the main rotation animation
+	Config.MainRotationSpringDampening number -- The spring dampening for the main rotation animation
+	Config.AspectRatioSpringSpeed number -- The spring speed for the aspect ratio animation
+	Config.AspectRatioSpringDampening number -- The spring dampening for the aspect ratio animation
+	Config.ProgressBarYScale number -- The Y scale (0-1) of the progress bar size
+	Config.ShowShimmer boolean -- Whether the shimmer effect plays when the prompt appears
+	Config.GuiOffsetSpringSpeed number -- The spring speed for the BillboardGui animation
+	Config.GuiOffsetSpringDampening number -- The spring dampening for the BillboardGui animation
+	```
+
+	@class ExpressivePrompts
+]=]
+
+--[=[
+	@class 
 ]=]
 
 local ExpressivePrompts = {}
@@ -55,7 +78,7 @@ local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.Proximity
 		AlwaysOnTop = true,
 		Parent = Gui,
 		Adornee = Prompt.Parent,
-        ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
 
 		StudsOffset = PromptScope:Spring(PromptScope:Computed(function(Use)
 			return Use(PromptTransparency) < 1 and Vector3.new(0, 0, 0) or Vector3.new(-1, 0, 0)
@@ -63,8 +86,8 @@ local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.Proximity
 	})
 
 	local Frame : CanvasGroup, ResizeableInputFrame : Frame = unpack(BuildFrames(
-        PromptScope,
-        Seam,
+		PromptScope,
+		Seam,
 		PromptUI,
 		ButtonHeldDown,
 		PromptTransparency,
@@ -74,7 +97,7 @@ local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.Proximity
 	))
 
 	local ActionText : TextLabel, ObjectText : TextLabel = unpack(BuildTextLabels(
-        PromptScope,
+		PromptScope,
 		Frame,
 		ButtonHeldDown
 	))
@@ -124,7 +147,7 @@ local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.Proximity
 	end
 
 	local UpdateCallback = GetUpdateCallback(
-        PromptScope,
+		PromptScope,
 		Prompt,
 		PromptUI,
 		AspectRatioValue,
@@ -135,57 +158,57 @@ local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.Proximity
 	InputConnections[# InputConnections+1] = Prompt.Changed:Connect(UpdateCallback)
 	UpdateCallback()
 	PromptTransparency.Value = 0
-    
-    for _, Connection in InputConnections do
-        PromptScope:AddObject(Connection)
-    end
+	
+	for _, Connection in InputConnections do
+		PromptScope:AddObject(Connection)
+	end
 
 	return function()
 		ButtonHeldDown.Value = false
 		PromptTransparency.Value = 1
 
-        task.delay(2, function()
-            PromptScope:Destroy()
-        end)
+		task.delay(2, function()
+			PromptScope:Destroy()
+		end)
 	end
 end
 
 --[=[
-    Initializes ExpressivePrompts. Call only one time.
+	Initializes ExpressivePrompts. Call only one time.
 ]=]
 
 function ExpressivePrompts.Init()
-    if Gui then
-        warn("Attempted to call ExpressivePrompts.Init(); already initialized by another script")
-        return
-    end
+	if Gui then
+		warn("Attempted to call ExpressivePrompts.Init(); already initialized by another script")
+		return
+	end
 
-    Gui = Scope:New("ScreenGui", {
+	Gui = Scope:New("ScreenGui", {
 		Name = "ExpressivePromptsGui",
 		ResetOnSpawn = false,
 		IgnoreGuiInset = true,
 		Parent = Player:WaitForChild("PlayerGui"),
 	})
 
-    ProximityPromptService.PromptShown:Connect(function(Prompt : ProximityPrompt, InputType : Enum.ProximityPromptInputType)
-        if Prompt.Style == Enum.ProximityPromptStyle.Default then
-            local LastParent = Prompt.Parent
+	ProximityPromptService.PromptShown:Connect(function(Prompt : ProximityPrompt, InputType : Enum.ProximityPromptInputType)
+		if Prompt.Style == Enum.ProximityPromptStyle.Default then
+			local LastParent = Prompt.Parent
 
 			Prompt.Style = Enum.ProximityPromptStyle.Custom
-            Prompt.Parent = nil
+			Prompt.Parent = nil
 
-            -- We refresh proximity prompts with default style so that we don't show overlapping UI
-            task.defer(function()
-                Prompt.Parent = LastParent
-            end)
+			-- We refresh proximity prompts with default style so that we don't show overlapping UI
+			task.defer(function()
+				Prompt.Parent = LastParent
+			end)
 
-            return
+			return
 		end
 
 		local CleanupFunction = CreatePrompt(Prompt, InputType)
 
 		Prompt.PromptHidden:Once(CleanupFunction)
-    end)
+	end)
 end
 
 return ExpressivePrompts
