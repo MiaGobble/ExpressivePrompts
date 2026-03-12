@@ -6,7 +6,7 @@ local KEYCODE_TO_TEXT_MAPPING = require(script.KeyCodeToTextMapping)
 -- Services
 local UserInputService = game:GetService("UserInputService")
 
-return function(Scope : any, prompt)
+return function(Scope : any, prompt, Config : {})
     local AddedChildren = {}
 	local buttonTextString = UserInputService:GetStringForKeyCode(prompt.KeyboardKeyCode)
 
@@ -25,11 +25,11 @@ return function(Scope : any, prompt)
 	AddedChildren[#AddedChildren + 1] = Scope:New("ImageLabel", {
 		Name = "ButtonImage",
 		BackgroundTransparency = 1,
-		--ImageTransparency = 1,
 		Size = UDim2.fromOffset(28, 30),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
 		Image = "rbxasset://textures/ui/Controls/key_single.png",
+		ImageColor3 = Config.TextColor,
 	})
 
 	if buttonTextImage then
@@ -39,8 +39,8 @@ return function(Scope : any, prompt)
 			Size = UDim2.fromOffset(36, 36),
 			Position = UDim2.fromScale(0.5, 0.5),
 			BackgroundTransparency = 1,
-			--ImageTransparency = 1,
 			Image = buttonTextImage,
+			ImageColor3 = Config.TextColor,
 		})
 	elseif buttonTextString ~= nil and buttonTextString ~= "" then
 		AddedChildren[#AddedChildren + 1] = Scope:New("TextLabel", {
@@ -50,8 +50,7 @@ return function(Scope : any, prompt)
 			Font = Enum.Font.GothamMedium,
 			TextSize = if string.len(buttonTextString) > 2 then 12 else 14,
 			BackgroundTransparency = 1,
-			--TextTransparency = 1,
-			TextColor3 = Color3.new(1, 1, 1),
+			TextColor3 = Config.TextColor,
 			TextXAlignment = Enum.TextXAlignment.Center,
 			Text = buttonTextString,
 		})

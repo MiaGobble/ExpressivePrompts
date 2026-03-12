@@ -7,6 +7,7 @@
 	Config.BackgroundTransparency number -- The background transparency
 	Config.BackgroundColor Color3 -- The background color
 	Config.TextColor Color3 -- The text and icon color
+	Config.SubTextColor Color3 -- The sub text color
 	Config.CornerRadius number -- The corner radius on the main background
 	Config.MainSizeSpringSpeed number -- The spring speed for the main size animation
 	Config.MainSizeSpringDampening number -- The spring dampening for the main size animation
@@ -15,6 +16,8 @@
 	Config.AspectRatioSpringSpeed number -- The spring speed for the aspect ratio animation
 	Config.AspectRatioSpringDampening number -- The spring dampening for the aspect ratio animation
 	Config.ProgressBarYScale number -- The Y scale (0-1) of the progress bar size
+	Config.ProgressBarColor -- The color of the progress bar
+	Config.ProgressBarTransparency number -- The transparency of the progress bar
 	Config.ShowShimmer boolean -- Whether the shimmer effect plays when the prompt appears
 	Config.GuiOffsetSpringSpeed number -- The spring speed for the BillboardGui animation
 	Config.GuiOffsetSpringDampening number -- The spring dampening for the BillboardGui animation
@@ -46,6 +49,27 @@ local UpdateUIFromPrompt = require(script.UpdateUIFromPrompt)
 local Scope = Seam.Scope(Seam)
 local Player = PlayersService.LocalPlayer
 local Gui = nil
+
+-- Config
+ExpressivePrompts.Config = {
+	BackgroundTransparency = Scope:Value(0.5),
+	BackgroundColor = Scope:Value(Color3.new(0.07, 0.07, 0.07)),
+	TextColor = Scope:Value(Color3.new(1, 1, 1)), -- TODO: Implement
+	SubTextColor = Scope:Value(Color3.new(0.7, 0.7, 0.7)),
+	CornerRadius = Scope:Value(16),
+	MainSizeSpringSpeed = Scope:Value(20),
+	MainSizeSpringDampening = Scope:Value(0.4),
+	MainRotationSpringSpeed = Scope:Value(30),
+	MainRotationSpringDampening = Scope:Value(0.1),
+	AspectRatioSpringSpeed = Scope:Value(20),
+	AspectRatioSpringDampening = Scope:Value(0.4),
+	ProgressBarYScale = Scope:Value(0.1),
+	ProgressBarColor = Scope:Value(Color3.new(1, 1, 1)),
+	ProgressBarTransparency = Scope:Value(0.5),
+	ShowShimmer = Scope:Value(true),
+	GuiOffsetSpringSpeed = Scope:Value(15),
+	GuiOffsetSpringDampening = Scope:Value(0.5),
+}
 
 local function GetUpdateCallback(...)
 	local Args = {...}
@@ -82,12 +106,13 @@ local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.Proximity
 
 		StudsOffset = PromptScope:Spring(PromptScope:Computed(function(Use)
 			return Use(PromptTransparency) < 1 and Vector3.new(0, 0, 0) or Vector3.new(-1, 0, 0)
-		end), 15, 0.5)
+		end), ExpressivePrompts.Config.GuiOffsetSpringSpeed, ExpressivePrompts.Config.GuiOffsetSpringDampening)
 	})
 
 	local Frame : CanvasGroup, ResizeableInputFrame : Frame = unpack(BuildFrames(
 		PromptScope,
 		Seam,
+		ExpressivePrompts.Config,
 		PromptUI,
 		ButtonHeldDown,
 		PromptTransparency,
@@ -98,12 +123,13 @@ local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.Proximity
 
 	local ActionText : TextLabel, ObjectText : TextLabel = unpack(BuildTextLabels(
 		PromptScope,
+		ExpressivePrompts.Config,
 		Frame,
 		ButtonHeldDown
 	))
 
 	PromptScope:New(ResizeableInputFrame, {
-		[Seam.Children] = NewInputLabel(PromptScope, InputType, Prompt)
+		[Seam.Children] = NewInputLabel(PromptScope, InputType, Prompt, ExpressivePrompts.Config)
 	})
 
 	if InputType == Enum.ProximityPromptInputType.Touch or Prompt.ClickablePrompt then

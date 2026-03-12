@@ -1,8 +1,8 @@
-return function(Scope : any, Seam : any, PromptUI, ButtonHeldDown, PromptTransparency, AspectRatioValue, CurrentBarSize, CurrentFrameScaleFactor) : {any}
+return function(Scope : any, Seam : any, Config : {}, PromptUI, ButtonHeldDown, PromptTransparency, AspectRatioValue, CurrentBarSize, CurrentFrameScaleFactor) : {any}
 	local Frame = Scope:New("CanvasGroup", {
 		Size = Scope:Spring(Scope:Computed(function(Use)
 			return Use(ButtonHeldDown) and UDim2.fromScale(0.5, 1) or UDim2.fromScale(1, 1)
-		end), 20, 0.4),
+		end), Config.MainSizeSpringSpeed, Config.MainSizeSpringDampening),
 
 		Rotation = Scope:Spring(Scope:Computed(function(Use)
 			if Use(ButtonHeldDown) then
@@ -12,22 +12,24 @@ return function(Scope : any, Seam : any, PromptUI, ButtonHeldDown, PromptTranspa
 			else
 				return 5
 			end
-		end), 30, 0.1),
+		end), Config.MainRotationSpringSpeed, Config.MainRotationSpringDampening),
 		
-		BackgroundTransparency = 0.5,
+		BackgroundTransparency = Config.BackgroundTransparency,
 		GroupTransparency = Scope:Spring(PromptTransparency, 30, 1),
-		BackgroundColor3 = Color3.new(0.07, 0.07, 0.07),
+		BackgroundColor3 = Config.BackgroundColor,
 		Parent = PromptUI,
 
 		[Seam.Children] = {
 			Scope:New("UICorner", {
-				CornerRadius = UDim.new(0, 16),
+				CornerRadius = Scope:Computed(function(Use)
+					return UDim.new(0, Use(Config.CornerRadius))
+				end),
 			}),
 
 			Scope:New("UIAspectRatioConstraint", {
 				AspectRatio = Scope:Spring(Scope:Computed(function(Use)
 					return Use(ButtonHeldDown) and 1 or Use(AspectRatioValue)
-				end), 20, 0.4),
+				end), Config.AspectRatioSpringSpeed, Config.AspectRatioSpringDampening),
 			}),
 
 			Scope:New("Frame", {
@@ -35,23 +37,23 @@ return function(Scope : any, Seam : any, PromptUI, ButtonHeldDown, PromptTranspa
 				Position = UDim2.fromScale(0, 1),
 				AnchorPoint = Vector2.new(0, 1),
 				BorderSizePixel = 0,
-				BackgroundColor3 = Color3.new(1, 1, 1),
-				BackgroundTransparency = 0.5,
+				BackgroundColor3 = Config.ProgressBarColor,
+				BackgroundTransparency = Config.ProgressBarTransparency,
 				Size = Scope:Computed(function(Use)
-					return UDim2.fromScale(Use(CurrentBarSize), 0.1)
+					return UDim2.fromScale(Use(CurrentBarSize), Use(Config.ProgressBarYScale))
 				end),
 			}),
 
 			Scope:New("UIGradient", {
+				Rotation = 45,
+				Enabled = Config.ShowShimmer,
+
 				Transparency = NumberSequence.new{
 					NumberSequenceKeypoint.new(0, 0),
-					--NumberSequenceKeypoint.new(0.2, 0),
 					NumberSequenceKeypoint.new(0.5, 0.5),
-					--NumberSequenceKeypoint.new(0.8, 0),
 					NumberSequenceKeypoint.new(1, 0),
 				},
 
-				Rotation = 45,
 				Offset = Scope:Spring(Scope:Computed(function(Use)
 					return Use(PromptTransparency) < 1 and Vector2.new(1, 0) or Vector2.new(-1, 0)
 				end), 8, 1),

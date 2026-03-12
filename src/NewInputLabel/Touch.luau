@@ -1,7 +1,8 @@
-return function(Scope : any)
+return function(Scope : any, Prompt : ProximityPrompt, Config : {})
     return {
         Scope:New("ImageLabel", {
             Name = "ButtonImage",
+            ImageColor3 = Config.TextColor,
             BackgroundTransparency = 1,
             ImageTransparency = 1,
             Size = UDim2.fromOffset(25, 31),
