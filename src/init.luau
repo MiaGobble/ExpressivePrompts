@@ -4,6 +4,7 @@
 	Below are the config entries:
 	
 	```
+	-- Since v1.0.0
 	Config.BackgroundTransparency number -- The background transparency
 	Config.BackgroundColor Color3 -- The background color
 	Config.TextColor Color3 -- The text and icon color
@@ -27,15 +28,12 @@
 	@class ExpressivePrompts
 ]=]
 
---[=[
-	@class 
-]=]
-
 local ExpressivePrompts = {}
 
 -- Services
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local PlayersService = game:GetService("Players")
+local TextService = game:GetService("TextService")
 
 if not game:IsLoaded() then -- Useful for when loading this from a script in ReplicatedFirst
 	game.Loaded:Wait()
@@ -46,9 +44,7 @@ local Packages = script:FindFirstChild("Packages")
 local Seam = if Packages then require(Packages.Seam) else require(script.Parent.Seam)
 local NewInputLabel = require(script.NewInputLabel)
 local NewInputConnections = require(script.NewInputConnections)
-local BuildTextLabels = require(script.BuildTextLabels)
 local BuildFrames = require(script.BuildFrames)
-local UpdateUIFromPrompt = require(script.UpdateUIFromPrompt)
 
 -- Variables
 local Scope = Seam.Scope(Seam)
@@ -57,6 +53,7 @@ local Gui = nil
 
 -- Config
 ExpressivePrompts.Config = {
+	-- Since v1.0.0
 	BackgroundTransparency = Scope:Value(0.5),
 	BackgroundColor = Scope:Value(Color3.new(0.07, 0.07, 0.07)),
 	TextColor = Scope:Value(Color3.new(1, 1, 1)),
@@ -75,15 +72,18 @@ ExpressivePrompts.Config = {
 	ShowShimmer = Scope:Value(true),
 	GuiOffsetSpringSpeed = Scope:Value(15),
 	GuiOffsetSpringDampening = Scope:Value(0.5),
+
+	-- Since v1.1.0
+	PromptHeight = Scope:Value(72),
+	PromptWidth = Scope:Value(72),
+	TextPaddingLeft = Scope:Value(72),
+	ActionTextSize = Scope:Value(19),
+	ObjectTextSize = Scope:Value(14),
+	ActionTextFont = Scope:Value(Enum.Font.GothamMedium),
+	ObjectTextFont = Scope:Value(Enum.Font.GothamMedium),
+	ActionTextYOffset = Scope:Value(9),
+	MiddlePadding = Scope:Value(24),
 }
-
-local function GetUpdateCallback(...)
-	local Args = {...}
-
-	return function()
-		UpdateUIFromPrompt(unpack(Args))
-	end
-end
 
 local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.ProximityPromptInputType)
 	local PromptScope = Scope:InnerScope()
@@ -91,9 +91,61 @@ local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.Proximity
 	local CurrentFrameScaleFactor = PromptScope:Value(1)
 	local PromptTransparency = PromptScope:Value(1)
 	local ButtonHeldDown = PromptScope:Value(false)
-	local AspectRatioValue = PromptScope:Value(1)
 	local CurrentBarSize = PromptScope:Value(0)
 
+	-- Create reactive values
+	local ActionTextSize = PromptScope:Computed(function(Use)
+		return TextService:GetTextSize(
+			Prompt.ActionText,
+			Use(ExpressivePrompts.Config.ActionTextSize),
+			Use(ExpressivePrompts.Config.ActionTextFont),
+			Vector2.new(1000, 1000)
+		)
+	end)
+
+	local ObjectTextSize = PromptScope:Computed(function(Use)
+		return TextService:GetTextSize(
+			Prompt.ObjectText,
+			Use(ExpressivePrompts.Config.ObjectTextSize),
+			Use(ExpressivePrompts.Config.ObjectTextFont),
+			Vector2.new(1000, 1000)
+		)
+	end)
+
+	local MaxTextWidth = PromptScope:Computed(function(Use)
+		return math.max(Use(ActionTextSize).X, Use(ObjectTextSize).X)
+	end)
+
+	local PromptWidth = PromptScope:Computed(function(Use)
+		local BaseWidth = Use(ExpressivePrompts.Config.PromptWidth)
+		local ModifiedWidth = Use(MaxTextWidth) + Use(ExpressivePrompts.Config.TextPaddingLeft) + Use(ExpressivePrompts.Config.MiddlePadding)
+
+		if (Prompt.ActionText ~= nil and Prompt.ActionText ~= "") or (Prompt.ObjectText ~= nil and Prompt.ObjectText ~= "") then
+			return ModifiedWidth
+		else
+			return BaseWidth
+		end
+	end)
+
+	local ActionTextYOffset = PromptScope:Computed(function(Use)
+		local TargetOffset = Use(ExpressivePrompts.Config.ActionTextYOffset)
+
+		if Prompt.ObjectText ~= nil and Prompt.ObjectText ~= "" then
+			return TargetOffset
+		else
+			return 0
+		end
+	end)
+
+	local UISize = PromptScope:Computed(function(Use)
+		return UDim2.fromOffset(Use(PromptWidth), Use(ExpressivePrompts.Config.PromptHeight))
+	end)
+
+	local AspectRatioValue = PromptScope:Computed(function(Use)
+		return Use(PromptWidth) / Use(ExpressivePrompts.Config.PromptHeight)
+	end)
+
+	-- Hook connections (which also control sounds)
 	local InputConnections : {RBXScriptConnection} = NewInputConnections(Scope, {
 		prompt = Prompt,
 		ButtonHeldDown = ButtonHeldDown,
@@ -103,12 +155,21 @@ local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.Proximity
 		InputFrameScaleFactor = InputFrameScaleFactor,
 	})
 
+	-- Make the billboard gui and main frame
 	local PromptUI : BillboardGui = PromptScope:New("BillboardGui", {
 		Name = `Prompt_{Prompt:GetFullName()}`,
 		AlwaysOnTop = true,
 		Parent = Gui,
 		Adornee = Prompt.Parent,
 		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+		Size = UISize,
+
+		SizeOffset = PromptScope:Computed(function(Use)
+			return Vector2.new(
+				Prompt.UIOffset.X / Use(UISize).Width.Offset,
+				Prompt.UIOffset.Y / Use(UISize).Height.Offset
+			)
+		end),
 
 		StudsOffset = PromptScope:Spring(PromptScope:Computed(function(Use)
 			return Use(PromptTransparency) < 1 and Vector3.new(0, 0, 0) or Vector3.new(-1, 0, 0)
@@ -127,17 +188,57 @@ local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.Proximity
 		CurrentFrameScaleFactor
 	))
 
-	local ActionText : TextLabel, ObjectText : TextLabel = unpack(BuildTextLabels(
-		PromptScope,
-		ExpressivePrompts.Config,
-		Frame,
-		ButtonHeldDown
-	))
+	-- Make the text labels
+	local ActionText = PromptScope:New("TextLabel", {
+		Name = "ActionText",
+		Size = UDim2.fromScale(1, 1),
+		Font = ExpressivePrompts.Config.ActionTextFont,
+		TextSize = ExpressivePrompts.Config.ActionTextSize,
+		BackgroundTransparency = 1,
+		TextColor3 = ExpressivePrompts.Config.TextColor,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = Frame,
+		Text = Prompt.ActionText,
+        AutoLocalize = Prompt.AutoLocalize,
+        RootLocalizationTable = Prompt.RootLocalizationTable,
 
+		Position = PromptScope:Computed(function(Use)
+			return UDim2.new(0.5, Use(ExpressivePrompts.Config.TextPaddingLeft) - Use(PromptWidth) / 2, 0, Use(ActionTextYOffset))
+		end),
+
+		TextTransparency = PromptScope:Spring(PromptScope:Computed(function(Use)
+			return Use(ButtonHeldDown) and 1 or 0
+		end), 30, 1)
+	})
+
+	local ObjectText = PromptScope:New("TextLabel", {
+		Name = "ObjectText",
+		Size = UDim2.fromScale(1, 1),
+		Font = ExpressivePrompts.Config.ObjectTextFont,
+		TextSize = ExpressivePrompts.Config.ObjectTextSize,
+		BackgroundTransparency = 1,
+		TextColor3 = ExpressivePrompts.Config.SubTextColor,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = Frame,
+		Text = Prompt.ObjectText,
+        AutoLocalize = Prompt.AutoLocalize,
+        RootLocalizationTable = Prompt.RootLocalizationTable,
+
+		Position = PromptScope:Computed(function(Use)
+			return UDim2.new(0.5, Use(ExpressivePrompts.Config.TextPaddingLeft) - Use(PromptWidth) / 2, 0, -10)
+		end),
+
+		TextTransparency = PromptScope:Spring(PromptScope:Computed(function(Use)
+			return Use(ButtonHeldDown) and 1 or 0
+		end), 30, 1)
+	})
+
+	-- Create the input label
 	PromptScope:New(ResizeableInputFrame, {
 		[Seam.Children] = NewInputLabel(PromptScope, InputType, Prompt, ExpressivePrompts.Config)
 	})
 
+	-- If the user is on mobile or the prompt is clickable, create click detection
 	if InputType == Enum.ProximityPromptInputType.Touch or Prompt.ClickablePrompt then
 		local IsButtonDown = false
 
@@ -178,23 +279,14 @@ local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.Proximity
 		})
 	end
 
-	local UpdateCallback = GetUpdateCallback(
-		PromptScope,
-		Prompt,
-		PromptUI,
-		AspectRatioValue,
-		ActionText,
-		ObjectText
-	)
-
-	InputConnections[# InputConnections+1] = Prompt.Changed:Connect(UpdateCallback)
-	UpdateCallback()
+	-- Finish setup
 	PromptTransparency.Value = 0
 	
 	for _, Connection in InputConnections do
 		PromptScope:AddObject(Connection)
 	end
 
+	-- Return cleanup function for when prompt is destroyed or player walks out of range
 	return function()
 		ButtonHeldDown.Value = false
 		PromptTransparency.Value = 1
@@ -215,6 +307,7 @@ function ExpressivePrompts.Init()
 		return
 	end
 
+	-- All prompts are kept in a single GUI
 	Gui = Scope:New("ScreenGui", {
 		Name = "ExpressivePromptsGui",
 		ResetOnSpawn = false,
@@ -222,14 +315,15 @@ function ExpressivePrompts.Init()
 		Parent = Player:WaitForChild("PlayerGui"),
 	})
 
+	-- When a prompt is shown, create the prompt UI
 	ProximityPromptService.PromptShown:Connect(function(Prompt : ProximityPrompt, InputType : Enum.ProximityPromptInputType)
+		-- We refresh proximity prompts with default style so that we don't show overlapping UI
 		if Prompt.Style == Enum.ProximityPromptStyle.Default then
 			local LastParent = Prompt.Parent
 
 			Prompt.Style = Enum.ProximityPromptStyle.Custom
 			Prompt.Parent = nil
 
-			-- We refresh proximity prompts with default style so that we don't show overlapping UI
 			task.defer(function()
 				Prompt.Parent = LastParent
 			end)
@@ -237,8 +331,8 @@ function ExpressivePrompts.Init()
 			return
 		end
 
+		-- If it's a custom prompt style, create the prompt UI and hook it up
 		local CleanupFunction = CreatePrompt(Prompt, InputType)
-
 		Prompt.PromptHidden:Once(CleanupFunction)
 	end)
 end
