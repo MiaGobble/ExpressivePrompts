@@ -8,24 +8,21 @@ type Properties = {
     InputFrameScaleFactor: any,
 }
 
--- Constants
-local APPEAR_SOUND = "rbxassetid://10066931761"
-local CLICK_SOUND = "rbxassetid://10128760939"
-local HOLD_SOUND = "rbxassetid://421058925"
-local TRIGGER_SOUND = "rbxassetid://10128766965"
-
 -- Services
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
 
+-- Imports
+local SoundData = require(script.Parent.SoundData)
+
 local function PlaySound(Scope : any, SoundId : string, Properties : {[string]: any}?)
-	local Sound = SoundService:FindFirstChild(SoundId)
+	local Sound = SoundService:FindFirstChild(SoundId.Value)
 
 	if not Sound then
 		Sound = Scope:New(Scope:New("Sound", {
 			Name = SoundId,
 			SoundId = SoundId,
-			Volume = 0.35,
+			Volume = SoundData.SoundVolume,
 			Parent = SoundService,
 		}), Properties or {})
 	end
@@ -34,7 +31,7 @@ local function PlaySound(Scope : any, SoundId : string, Properties : {[string]: 
 end
 
 local function StopSound(SoundId)
-	local Sound = SoundService:FindFirstChild(SoundId)
+	local Sound = SoundService:FindFirstChild(SoundId.Value)
 
 	if Sound then
 		Sound:Stop()
@@ -45,7 +42,7 @@ return function(Scope : any, Properties : Properties) : {RBXScriptConnection}
     local InputConnections = {}
 	local HoldStart = os.clock()
 
-	PlaySound(Scope, APPEAR_SOUND)
+	PlaySound(Scope, SoundData.AppearSoundId)
 
 	if Properties.prompt.HoldDuration > 0 then
 		InputConnections[#InputConnections + 1] = RunService.RenderStepped:Connect(function(deltaTime)
@@ -54,7 +51,7 @@ return function(Scope : any, Properties : Properties) : {RBXScriptConnection}
 			if Properties.ButtonHeldDown.Value then
 				Properties.CurrentBarSize.Value = math.min(Properties.CurrentBarSize.Value + deltaTime / Properties.prompt.HoldDuration, 1)
 	
-				SoundService:FindFirstChild(HOLD_SOUND).PlaybackSpeed = 0.5 + TimeHeldDown
+				SoundService:FindFirstChild(SoundData.HoldSoundId.Value).PlaybackSpeed = 0.5 + TimeHeldDown
 			else
 				Properties.CurrentBarSize.Value = 0
 			end
@@ -62,17 +59,17 @@ return function(Scope : any, Properties : Properties) : {RBXScriptConnection}
 
 		InputConnections[#InputConnections + 1] = Properties.prompt.PromptButtonHoldBegan:Connect(function()
 			HoldStart = os.clock()
-			PlaySound(Scope, HOLD_SOUND, {
+			PlaySound(Scope, SoundData.HoldSoundId, {
 				Looped = true,
 				Volume = 0.2,
 			})
-			PlaySound(Scope, CLICK_SOUND)
+			PlaySound(Scope, SoundData.ClickSoundId)
 			Properties.ButtonHeldDown.Value = true
 			Properties.CurrentFrameScaleFactor.Value = Properties.InputFrameScaleFactor
 		end)
 
 		InputConnections[#InputConnections + 1] = Properties.prompt.PromptButtonHoldEnded:Connect(function()
-			StopSound(HOLD_SOUND)
+			StopSound(SoundData.HoldSoundId)
 			Properties.ButtonHeldDown.Value = false
 			Properties.CurrentFrameScaleFactor.Value = 1
 		end)
@@ -80,9 +77,9 @@ return function(Scope : any, Properties : Properties) : {RBXScriptConnection}
 
 	InputConnections[#InputConnections + 1] = Properties.prompt.Triggered:Connect(function()
 		if Properties.prompt.HoldDuration > 0 then
-			PlaySound(Scope, TRIGGER_SOUND)
+			PlaySound(Scope, SoundData.TriggerSoundId)
 		else
-			PlaySound(Scope, CLICK_SOUND)
+			PlaySound(Scope, SoundData.ClickSoundId)
 			Properties.ButtonHeldDown.Value = true
 
 			task.delay(1 / 60, function()

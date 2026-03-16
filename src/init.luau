@@ -34,6 +34,11 @@
 	Config.ObjectTextFont Enum.Font -- The text font of the object text
 	Config.ActionTextYOffset number -- The Y offset separating the text labels
 	Config.MiddlePadding number -- The middle padding offset between elements
+	Config.AppearSoundId string -- The sound id for the appear sound
+	Config.ClickSoundId string -- The sound id for the click sound
+	Config.HoldSoundId string -- The sound id for the hold sound
+	Config.TriggerSoundId string -- The sound id for the hold trigger sound
+	Config.SoundVolume number -- The volume of the prompt sounds
 	```
 
 	@class ExpressivePrompts
@@ -56,6 +61,7 @@ local Seam = if Packages then require(Packages.Seam) else require(script.Parent.
 local NewInputLabel = require(script.NewInputLabel)
 local NewInputConnections = require(script.NewInputConnections)
 local BuildFrames = require(script.BuildFrames)
+local SoundData = require(script.SoundData) -- Temporary to link up stinky code (maybe I should put all config in a module?)
 
 -- Variables
 local Scope = Seam.Scope(Seam)
@@ -94,6 +100,11 @@ ExpressivePrompts.Config = {
 	ObjectTextFont = Scope:Value(Enum.Font.GothamMedium),
 	ActionTextYOffset = Scope:Value(9),
 	MiddlePadding = Scope:Value(24),
+	AppearSoundId = SoundData.AppearSoundId,
+	ClickSoundId = SoundData.ClickSoundId,
+	HoldSoundId = SoundData.HoldSoundId,
+	TriggerSoundId = SoundData.TriggerSoundId,
+	SoundVolume = SoundData.SoundVolume,
 }
 
 local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.ProximityPromptInputType)
