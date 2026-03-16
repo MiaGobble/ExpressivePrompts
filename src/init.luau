@@ -23,6 +23,17 @@
 	Config.ShowShimmer boolean -- Whether the shimmer effect plays when the prompt appears
 	Config.GuiOffsetSpringSpeed number -- The spring speed for the BillboardGui animation
 	Config.GuiOffsetSpringDampening number -- The spring dampening for the BillboardGui animation
+
+	-- Since v1.1.0
+	Config.PromptHeight number -- The offset height for the prompt
+	Config.PromptWidth number -- The offset width for the prompt
+	Config.TextPaddingLeft number -- The offset padding left to the text
+	Config.ActionTextSize number -- The text size of the action text
+	Config.ObjectTextSize number -- The text size of the object text
+	Config.ActionTextFont Enum.Font -- The text font of the action text
+	Config.ObjectTextFont Enum.Font -- The text font of the object text
+	Config.ActionTextYOffset number -- The Y offset separating the text labels
+	Config.MiddlePadding number -- The middle padding offset between elements
 	```
 
 	@class ExpressivePrompts
