@@ -117,21 +117,31 @@ local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.Proximity
 
 	-- Create reactive values
 	local ActionTextSize = PromptScope:Computed(function(Use)
-		return TextService:GetTextSize(
-			Prompt.ActionText,
-			Use(ExpressivePrompts.Config.ActionTextSize),
-			Use(ExpressivePrompts.Config.ActionTextFont),
-			Vector2.new(1000, 1000)
-		)
+		local Params = PromptScope:New("GetTextBoundsParams", {
+			Text = Prompt.ActionText,
+			Font = Font.fromEnum(Use(ExpressivePrompts.Config.ActionTextFont)),
+			Size = Use(ExpressivePrompts.Config.ActionTextSize),
+			Width = math.huge,
+			RichText = true,
+		})
+
+		local TextBounds = TextService:GetTextBoundsAsync(Params)
+
+		return TextBounds
 	end)
 
 	local ObjectTextSize = PromptScope:Computed(function(Use)
-		return TextService:GetTextSize(
-			Prompt.ObjectText,
-			Use(ExpressivePrompts.Config.ObjectTextSize),
-			Use(ExpressivePrompts.Config.ObjectTextFont),
-			Vector2.new(1000, 1000)
-		)
+		local Params = PromptScope:New("GetTextBoundsParams", {
+			Text = Prompt.ObjectText,
+			Font = Font.fromEnum(Use(ExpressivePrompts.Config.ObjectTextFont)),
+			Size = Use(ExpressivePrompts.Config.ObjectTextSize),
+			Width = math.huge,
+			RichText = true,
+		})
+
+		local TextBounds = TextService:GetTextBoundsAsync(Params)
+
+		return TextBounds
 	end)
 
 	local MaxTextWidth = PromptScope:Computed(function(Use)
