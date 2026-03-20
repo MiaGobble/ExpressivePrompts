@@ -223,6 +223,7 @@ local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.Proximity
 		Text = Prompt.ActionText,
         AutoLocalize = Prompt.AutoLocalize,
         RootLocalizationTable = Prompt.RootLocalizationTable,
+		RichText = true,
 
 		Position = PromptScope:Computed(function(Use)
 			return UDim2.new(0.5, Use(ExpressivePrompts.Config.TextPaddingLeft) - Use(PromptWidth) / 2, 0, Use(ActionTextYOffset))
@@ -245,6 +246,7 @@ local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.Proximity
 		Text = Prompt.ObjectText,
         AutoLocalize = Prompt.AutoLocalize,
         RootLocalizationTable = Prompt.RootLocalizationTable,
+		RichText = true,
 
 		Position = PromptScope:Computed(function(Use)
 			return UDim2.new(0.5, Use(ExpressivePrompts.Config.TextPaddingLeft) - Use(PromptWidth) / 2, 0, -10)
