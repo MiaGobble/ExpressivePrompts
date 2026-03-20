@@ -2,7 +2,7 @@
 
 -- Imports
 local Packages = script.Parent:FindFirstChild("Packages")
-local Seam = if Packages then require(Packages.Seam) else require(script.Parent.Seam)
+local Seam = if Packages then require(Packages.Seam) else require(script.Parent.Parent.Seam)
 
 -- Variables
 local Scope = Seam.Scope(Seam)
