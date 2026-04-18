@@ -107,6 +107,10 @@ ExpressivePrompts.Config = {
 	SoundVolume = SoundData.SoundVolume,
 }
 
+local function StripRichText(text)
+    return (text or ""):gsub("<[^>]+>", "")
+end
+
 local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.ProximityPromptInputType)
 	local PromptScope = Scope:InnerScope()
 	local InputFrameScaleFactor = InputType == Enum.ProximityPromptInputType.Touch and 1.6 or 1.33
@@ -117,31 +121,33 @@ local function CreatePrompt(Prompt : ProximityPrompt, InputType : Enum.Proximity
 
 	-- Create reactive values
 	local ActionTextSize = PromptScope:Computed(function(Use)
-		local Params = PromptScope:New("GetTextBoundsParams", {
-			Text = Prompt.ActionText,
-			Font = Font.fromEnum(Use(ExpressivePrompts.Config.ActionTextFont)),
-			Size = Use(ExpressivePrompts.Config.ActionTextSize),
-			Width = math.huge,
-			RichText = true,
-		})
+		local Text = StripRichText(Prompt.ActionText)
 
-		local TextBounds = TextService:GetTextBoundsAsync(Params)
+		if Text == "" then
+			return Vector2.new(0, 0)
+		end
 
-		return TextBounds
+		return TextService:GetTextSize(
+			Text,
+			Use(ExpressivePrompts.Config.ActionTextSize),
+			Use(ExpressivePrompts.Config.ActionTextFont),
+			Vector2.new(math.huge, math.huge)
+		)
 	end)
 
 	local ObjectTextSize = PromptScope:Computed(function(Use)
-		local Params = PromptScope:New("GetTextBoundsParams", {
-			Text = Prompt.ObjectText,
-			Font = Font.fromEnum(Use(ExpressivePrompts.Config.ObjectTextFont)),
-			Size = Use(ExpressivePrompts.Config.ObjectTextSize),
-			Width = math.huge,
-			RichText = true,
-		})
+		local Text = StripRichText(Prompt.ObjectText)
 
-		local TextBounds = TextService:GetTextBoundsAsync(Params)
+		if Text == "" then
+			return Vector2.new(0, 0)
+		end
 
-		return TextBounds
+		return TextService:GetTextSize(
+			Text,
+			Use(ExpressivePrompts.Config.ObjectTextSize),
+			Use(ExpressivePrompts.Config.ObjectTextFont),
+			Vector2.new(math.huge, math.huge)
+		)
 	end)
 
 	local MaxTextWidth = PromptScope:Computed(function(Use)

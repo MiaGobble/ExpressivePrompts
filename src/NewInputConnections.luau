@@ -88,5 +88,11 @@ return function(Scope : any, Properties : Properties) : {RBXScriptConnection}
 		end
 	end)
 
+	InputConnections[#InputConnections + 1] = Properties.prompt.AncestryChanged:Connect(function(_, Parent)
+		if not Parent and Properties.ButtonHeldDown.Value then
+			StopSound(SoundData.HoldSoundId)
+		end
+	end)
+
     return InputConnections
 end
